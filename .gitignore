@@ -1,0 +1,56 @@
+# CMake and Zig build directories and install outputs.
+/build*/
+/zig-out*/
+/.zig-cache/
+/zig-cache/
+/bin/
+
+# CMake files produced by an in-source build.
+/CMakeCache.txt
+/CMakeFiles/
+/Makefile
+/cmake_install.cmake
+/CTestTestfile.cmake
+/DartConfiguration.tcl
+/Testing/
+/generated/
+/netmare
+/netmare.exe
+
+# Compiled objects, libraries, and legacy Makefile executables.
+*.o
+*.a
+*.so
+*.so.*
+*.dylib
+*.exe
+/src/mare/netmare
+/src/util/bigram
+/src/util/findstrings
+/src/util/redir
+/src/util/wd
+
+# Machine-specific configuration and generated build stamps.
+/src/.config
+/src/config.in
+/src/mare/.version
+
+# Live databases, logs, reboot state, and crash dumps.
+/run/db/
+/run/logs/
+/run/logs.bak/
+core
+core.[0-9]*
+*.core
+
+# Python caches, editor backups, and macOS metadata.
+__pycache__/
+*.py[cod]
+*.swp
+*.swo
+*~
+.DS_Store
+
+# These are archived source files, even if a global ignore excludes their names.
+!/src/hdrs/config.h
+!/src/**/Makefile

@@ -1,4 +1,5 @@
 /* game/player.c */
+/* Modified October 6, 2026: shift password salt bits as an unsigned integer. */
 
 #include "externs.h"
 
@@ -163,7 +164,7 @@ int crypt_pass(dbref player, char *pass, int check)
 
   if(!check) {
     /* encrypt new password using MD5 */
-    a=(rand() & 65535) | (rand() << 16);
+    a=(rand() & 65535) | ((unsigned int)rand() << 16);
     memcpy(db[player].data->pass+4, md5_hash(pass, a), 16);
     a=htonl(a);
     memcpy(db[player].data->pass, (char *)&a, 4);

@@ -1,4 +1,5 @@
 /* io/dns.c */
+/* Modified October 6, 2026: Use an owned resolver state for aligned DNS access. */
 /* Non-blocking nameserver interface routines */
 
 #include "externs.h"
@@ -13,7 +14,30 @@
 #undef C_ANY
 
 #include <arpa/nameser.h>
+#ifdef __APPLE__
+#include <arpa/nameser_compat.h>
+#endif
 #include <resolv.h>
+
+#ifdef __APPLE__
+/* Some macOS versions expose a legacy _res symbol with insufficient alignment. */
+static struct __res_state dns_state;
+static int dns_initialized;
+
+static int dns_init_state(void)
+{
+  if(dns_initialized)
+    return 0;
+  if(res_ninit(&dns_state) < 0) {
+    perror("res_ninit");
+    return -1;
+  }
+  dns_initialized=1;
+  return 0;
+}
+#else
+#define dns_state _res
+#endif
 
 static struct resolve {
   struct resolve *next;
@@ -38,8 +62,13 @@ int dns_open()
 {
   int s, on=1;
 
+#ifdef __APPLE__
+  if(dns_init_state() < 0)
+    return -1;
+#else
   res_init();
-  if(!_res.nscount) {
+#endif
+  if(!dns_state.nscount) {
     log_resolv("Startup: No nameservers defined.");
     return -1;
   }
@@ -71,8 +100,16 @@ static void send_dns_request(struct resolve *rp)
   /* make query packet for nameserver */
   s=(char *)&rp->ip;
   sprintf(buf, "%d.%d.%d.%d.in-addr.arpa", s[3], s[2], s[1], s[0]);
-  if((r=res_mkquery(QUERY,buf,C_IN,T_PTR,NULL,0,NULL,packet,PACKETSZ)) <= 0) {
-    perror("res_mkquery");
+#ifdef __APPLE__
+  /* A reboot can restore the DNS socket without calling dns_open(). */
+  if(dns_init_state() < 0)
+    return;
+  r=res_nmkquery(&dns_state,QUERY,buf,C_IN,T_PTR,NULL,0,NULL,packet,PACKETSZ);
+#else
+  r=res_mkquery(QUERY,buf,C_IN,T_PTR,NULL,0,NULL,packet,PACKETSZ);
+#endif
+  if(r <= 0) {
+    perror("DNS query construction");
     return;
   }
 
@@ -81,8 +118,8 @@ static void send_dns_request(struct resolve *rp)
   hp->id=rp->id;
 
   /* send query to all nameservers */
-  for(i=0;i<_res.nscount;i++)
-    sendto(resolv, packet, r, 0, (struct sockaddr *)&_res.nsaddr_list[i],
+  for(i=0;i<dns_state.nscount;i++)
+    sendto(resolv, packet, r, 0, (struct sockaddr *)&dns_state.nsaddr_list[i],
            sizeof(struct sockaddr));
 
   nstat[NS_QUERY]++;
