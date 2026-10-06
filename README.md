@@ -1,5 +1,8 @@
 # TinyMARE on macOS and Linux
 
+[![CMake CI](https://github.com/ncmud/TinyMARE/actions/workflows/cmake.yml/badge.svg?branch=trunk)](https://github.com/ncmud/TinyMARE/actions/workflows/cmake.yml)
+[![Zig CI](https://github.com/ncmud/TinyMARE/actions/workflows/zig.yml/badge.svg?branch=trunk)](https://github.com/ncmud/TinyMARE/actions/workflows/zig.yml)
+
 TinyMARE is Byron Stanoszek's (Gandalf's) code from WindsMARE. We host this
 repository for archival purposes, preserving his work and making it easier for
 people to jump in, build the server, and explore the game on modern systems.
@@ -9,6 +12,8 @@ portability fixes, and instructions for getting started.
 This archive is based on TinyMARE 1.0.10340. The original releases are available
 in the [WindsMARE TinyMARE release archive](https://www.winds.org/pub/tinymare/).
 See [LICENSE](LICENSE) for the original copyright notice and terms.
+
+![WindsMARE's colorful ASCII welcome screen and character login prompt](docs/images/windsmare-login.png)
 
 Both CMake and Zig compile the existing C game. Neither requires converting it
 to another language. Builds generate their own configuration header and leave
@@ -89,6 +94,11 @@ stop. If no administrator exists yet, find the listener with
 Stop the existing server before launching another build on the same port.
 
 ## Verification and comparison
+
+GitHub Actions builds and tests CMake and Zig on Linux and macOS for each pull
+request and push to `trunk`. Zig runs in both Debug and ReleaseFast modes; its
+Linux release job also builds and tests a static x86-64 Linux executable. Actions
+are pinned to release commits, with weekly Dependabot checks for updates.
 
 Python 3 is needed only for the smoke test. It starts a real server with a
 temporary database and checks character creation, login, expressions, object
