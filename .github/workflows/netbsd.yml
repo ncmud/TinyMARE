@@ -1,0 +1,36 @@
+name: NetBSD
+
+on:
+  push:
+    branches: [trunk]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: CMake / NetBSD
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Build and test NetBSD
+        uses: vmactions/netbsd-vm@c8a0d7ddb84619a7a8cc4e652efa7950b3fd9f92 # v1.5.2
+        with:
+          release: '10.1'
+          cpu: 2
+          prepare: /usr/sbin/pkg_add cmake python313
+          run: |
+            set -eu
+            export PATH=/usr/pkg/bin:/usr/pkg/sbin:$PATH
+            cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DBUILD_TESTING=ON
+            cmake --build build --parallel 2
+            ctest --test-dir build --output-on-failure --no-tests=error

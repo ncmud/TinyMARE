@@ -1,4 +1,5 @@
 /* io/net.c */
+/* Modified October 6, 2026: retain daemon stderr in the game error log. */
 /* Main server module, handles all network connections. */
 
 #include "externs.h"
@@ -306,9 +307,11 @@ static void init_io()
   /* All error output is logged to logs/error instead, and TinyMare's
      Main Output is logged to logs/main, with time prefixing each line */
 
+  mkdir("logs", 0777);
+  if(!freopen("logs/error", "a", stderr))
+    exit(1);
   fclose(stdin);
   fclose(stdout);
-  fclose(stderr);
 
   /* Disassociate from controlling terminal */
   if(!mare_watchdog) {

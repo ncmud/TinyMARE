@@ -1,4 +1,5 @@
 /* game/unparse.c */
+/* Modified October 6, 2026: parse color fields without forming a pointer before the buffer. */
 
 #include "externs.h"
 
@@ -164,14 +165,14 @@ int unparse_color(dbref player, dbref obj, int type)
     memcpy(env[a], sptr[a], len[a]);
 
   /* parse @color string */
-  for(s=buf-1;s && *(s+1);s=strchr(s+1, ',')) {
+  for(s=buf;s && *s;s=strchr(s, ','),s=s?s+1:NULL) {
     ++field;
 
     /* match day & night */
     if(bright && (field == 2 || field > 6))
       continue;
 
-    color=color_code(7, s+1);
+    color=color_code(7, s);
   }
 
   /* Channel/Description Text Modifier */

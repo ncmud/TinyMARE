@@ -1,5 +1,6 @@
 #!/bin/sh
 #
+# Modified October 6, 2026: portable shell probes and macOS resolver linking.
 # Configures TinyMARE for Compilation  - updated May 19 2003  Gandalf
 
 trap "echo [m;rm -f test.c test;exit 1" 1 2 3
@@ -95,7 +96,7 @@ defaultconfig()
   sleep 3
 
   # Check for the existence of GCC
-  gcc --version &> /dev/null
+  gcc --version > /dev/null 2>&1
   if [ "$?" = "0" ]; then
     cc=gcc
   else
@@ -140,6 +141,11 @@ defaultconfig()
     fi
   done
 
+  # The macOS SDK provides resolver symbols outside the filesystem scan.
+  if [ "$sysname" = "Darwin" ]; then
+    libs="$libs -lresolv"
+  fi
+
   # Architecture-dependent compiler flags
 
   if [ "$machine" = "ia64" ]; then
@@ -148,7 +154,7 @@ defaultconfig()
 
   # Additional compiler flags matched by system type
 
-  flags="$flags -Wall"
+  flags="$flags -std=gnu11 -Wall"
   if [ -n "`echo $sysname | grep -i Unix_S`" ]; then
     libs="$libs -lsocket -lgen -L/usr/ucblib -lucb"
     flags="$flags -I/usr/ucbinclude"
@@ -162,13 +168,13 @@ defaultconfig()
   fi
 
   # Don't warn about pointer signedness
-  $cc -E -Werror -Wpointer-sign -x c /dev/null &> /dev/null
+  $cc -c -Werror -Wpointer-sign -x c /dev/null -o /dev/null > /dev/null 2>&1
   if [ "$?" = "0" ]; then
     flags="$flags -Wno-pointer-sign"
   fi
 
   # Don't warn about snprintf() truncation
-  $cc -E -Werror -Wformat-truncation -x c /dev/null &> /dev/null
+  $cc -c -Werror -Wformat-truncation -x c /dev/null -o /dev/null > /dev/null 2>&1
   if [ "$?" = "0" ]; then
     flags="$flags -Wno-format-truncation"
   fi
@@ -372,7 +378,8 @@ fi
 
 # Determine if stack grows up or down
 echo $ac_n "[1;33mChecking which way the stack grows... [37m"$ac_c
-echo "int main() { void *a=alloca(1), *b=alloca(1); return b < a; }" > test.c
+echo "#include <stdlib.h>
+int main(void) { void *a=__builtin_alloca(1), *b=__builtin_alloca(1); return b < a; }" > test.c
 $cc $cflags -w -O$opt test.c -o test 2> /dev/null > /dev/null
 ./test 2> /dev/null > /dev/null
 stack=$?
