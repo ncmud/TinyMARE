@@ -62,6 +62,8 @@ open build-xcode/TinyMARE.xcodeproj
 Choose the `netmare` scheme and **My Mac**, then press **Run** (Cmd-R).
 The scheme uses `run/` as its working directory and keeps the server attached
 to the debugger. Set a different port in **Edit Scheme → Run → Arguments**.
+To debug the example below, prepare its runtime and set the working directory
+to `examples/azure-demo/` under **Run → Options**.
 
 ## Connect and save
 
@@ -72,3 +74,29 @@ connect from localhost and becomes the administrator.
 Use `@dump` to save and `@shutdown` as administrator to save and stop.
 Outside Xcode, the server runs in the background; Ctrl-C does not stop it.
 The database is `run/db/mdb`, and logs are in `run/logs/`.
+
+## Example world
+
+The bundled [Azure teaching world](examples/azure-demo.mdb) comes from
+[Eric Angell's KansasFest 2024 MareMac project](https://github.com/erangell/kfest2024/blob/ba77ec2fb88e29f01d71256f2f34be5a29ad31a2/MareMac/run/db/mdb).
+It has 10 rooms, 18 exits, and 22 informational objects about Azure.
+The original account's profile, credentials, and activity history have been
+replaced with a generic demo account. This example has no combat or quests.
+
+After building, copy the seed into a separate runtime directory:
+
+```sh
+mkdir -p examples/azure-demo/db examples/azure-demo/logs examples/azure-demo/mail
+cp -R run/msgs run/help run/etc run/maps examples/azure-demo/
+cp examples/azure-demo.mdb examples/azure-demo/db/mdb
+(cd examples/azure-demo && ../../build/netmare 7349)
+```
+
+For Zig, substitute `../../zig-out/bin/netmare` in the last command.
+Connect to `localhost:7349` as **DemoAdmin**, password **demo-local-only**.
+Run `@passwd` to change this public password before allowing remote access.
+Try `exits`, `VM`, and `@search`. Ordinary players' `@search` results are limited
+to objects they own; from Limbo, use `Learn` to enter the teaching world.
+
+The runtime and its saves are ignored by Git. Copying the seed again overwrites
+local progress. Use `@dump` to save and `@shutdown` to stop.
