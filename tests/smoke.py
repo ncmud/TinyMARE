@@ -7,6 +7,7 @@ import re
 import shutil
 import socket
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -35,12 +36,13 @@ def main():
 
         def start():
             nonlocal process, connection
-            process = subprocess.Popen([str(executable), str(port)], cwd=runtime, env=env,
-                                       stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            with (runtime / 'process.log').open('ab') as diagnostics:
+                process = subprocess.Popen([str(executable), str(port)], cwd=runtime, env=env,
+                                           stdout=diagnostics, stderr=subprocess.STDOUT)
             deadline = time.monotonic() + 10
             while time.monotonic() < deadline:
                 if process.poll() is not None:
-                    raise AssertionError('Server exited during startup')
+                    raise AssertionError(f'Server exited during startup (status {process.returncode})')
                 try:
                     connection = socket.create_connection(('127.0.0.1', port), timeout=.5)
                     connection.settimeout(.2)
@@ -105,6 +107,12 @@ def main():
             assert 'Runtime Malfunction' not in logs, logs
             print('PASS: character creation, login, expression evaluation, object creation, '
                   'database save/reload, and clean shutdown')
+        except Exception:
+            for path in [runtime / 'process.log', *sorted((runtime / 'logs').iterdir())]:
+                if path.is_file():
+                    print(f'--- {path.relative_to(runtime)} ---', file=sys.stderr)
+                    print(path.read_text(errors='replace'), file=sys.stderr)
+            raise
         finally:
             if connection:
                 connection.close()
