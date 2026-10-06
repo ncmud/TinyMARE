@@ -67,7 +67,9 @@ with `@shutdown` to save the database before ending the debugging session.
 To change the port, open **Product → Scheme → Edit Scheme → Run → Arguments**
 and add a port such as `7349` under **Arguments Passed On Launch**. Stop any
 server already listening on that port before running the scheme. The Xcode
-scheme uses your main `run/db/mdb` database.
+scheme uses your main `run/db/mdb` database; to debug the example world, prepare
+its runtime as described below and change the scheme's working directory to
+`examples/azure-demo/` under **Run → Options**.
 
 ## Zig
 
@@ -124,35 +126,42 @@ stop. If no administrator exists yet, find the listener with
 `lsof -nP -iTCP:7348 -sTCP:LISTEN` and send `kill -TERM <PID>` for a graceful stop.
 Stop the existing server before launching another build on the same port.
 
-## Verification and comparison
+## Example world
 
-GitHub Actions builds and tests CMake and Zig on Linux and macOS for each pull
-request and push to `trunk`. Zig runs in both Debug and ReleaseFast modes; its
-Linux release job also builds and tests a static x86-64 Linux executable. Actions
-are pinned to release commits, with weekly Dependabot checks for updates.
+The bundled [Azure demo database](examples/azure-demo.mdb) is adapted from
+[Eric Angell's MareMac example](https://github.com/erangell/kfest2024/blob/ba77ec2fb88e29f01d71256f2f34be5a29ad31a2/MareMac/run/db/mdb)
+in his KansasFest 2024 project. Credit for the educational world content belongs
+to its upstream author. It contains 10 rooms, 18 exits, and 22 informational
+objects about Azure. It demonstrates world building rather than combat or quests.
 
-Python 3 is needed only for the smoke test. It starts a real server with a
-temporary database and checks character creation, login, expressions, object
-creation, save/reload, and clean shutdown. It does not alter the real game.
+The bundled copy replaces the upstream player with a generic `DemoAdmin`
+account, resets its password and activity history, replaces its profile with synthetic placeholders,
+clears object timestamps, and uses the server's default configuration. It contains
+no data from your local game. TinyMARE requires an administrator account when
+loading an existing database.
+
+After building, run these commands from the repository root to prepare a separate
+example game. Its runtime directory and local saves are ignored by Git:
 
 ```sh
-ctest --test-dir build --output-on-failure
-DEVELOPER_DIR=/Library/Developer/CommandLineTools zig build test -Doptimize=ReleaseFast
+mkdir -p examples/azure-demo/db examples/azure-demo/logs examples/azure-demo/mail
+cp -R run/msgs run/help run/etc run/maps examples/azure-demo/
+cp examples/azure-demo.mdb examples/azure-demo/db/mdb
+(cd examples/azure-demo && ../../build/netmare 7349)
 ```
 
-On Linux, omit `DEVELOPER_DIR`. Either binary can also be tested directly:
-`python3 tests/smoke.py path/to/netmare`.
+For Zig, substitute `../../zig-out/bin/netmare` in the last command. Connect to
+`localhost:7349` and log in as `DemoAdmin` with password `demo-local-only`.
+This is a public demo password; run `@passwd` and follow its prompts before
+making the example accessible to others. You start in Azure; type `exits` to see
+the available destinations and `VM` to visit the virtual-machine room. Use `@search` to list all objects.
 
-| Consideration | CMake | Zig |
-| --- | --- | --- |
-| Build interface | Configure, then build | One build command |
-| Toolchain | Uses installed GCC/Clang | Includes its C compiler |
-| This Mac | Works with default Xcode setup | 0.15.2 needs the SDK setting above |
-| Linux | Native GCC build tested on Alpine | Native build tested on Alpine |
-| Cross compilation | Requires a target toolchain/sysroot | Mac-to-x86-64 Linux musl build tested |
-| Runtime verification | Passed on macOS and ARM64 Linux | Passed on macOS, ARM64 Linux, and cross-built x86-64 Linux |
+Use `@dump` to save and `@shutdown` to save and stop the example. Copying the
+bundled database into the runtime directory again resets the example and
+replaces its local saves. The checked-in database is a seed; run the copied
+runtime database so your own account changes and game activity stay out of Git.
 
-CMake is the lower-friction choice on this machine today. Zig offers the shorter
-interface and an already verified Linux cross-build. Both are available so the
-choice can remain open. Zig's [build-system documentation](https://ziglang.org/learn/build-system/)
-describes its compiler, target, and build options.
+For an online world to explore, the
+[MicroMARE connection instructions](https://github.com/erangell/kfest2024/blob/main/readme.md)
+list `mare.hoardersheaven.net:4201` with guest access. That is a separate hosted
+world; the Azure database above is the locally runnable example.

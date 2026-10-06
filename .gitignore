@@ -39,6 +39,8 @@
 /run/db/
 /run/logs/
 /run/logs.bak/
+# Example runtime copies and their local saves; the seed database is tracked.
+/examples/azure-demo/
 core
 core.[0-9]*
 *.core
