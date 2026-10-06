@@ -23,6 +23,18 @@
 /* Some macOS versions expose a legacy _res symbol with insufficient alignment. */
 static struct __res_state dns_state;
 static int dns_initialized;
+
+static int dns_init_state(void)
+{
+  if(dns_initialized)
+    return 0;
+  if(res_ninit(&dns_state) < 0) {
+    perror("res_ninit");
+    return -1;
+  }
+  dns_initialized=1;
+  return 0;
+}
 #else
 #define dns_state _res
 #endif
@@ -51,15 +63,8 @@ int dns_open()
   int s, on=1;
 
 #ifdef __APPLE__
-  if(dns_initialized)
-    res_nclose(&dns_state);
-  memset(&dns_state, 0, sizeof(dns_state));
-  dns_initialized=0;
-  if(res_ninit(&dns_state) < 0) {
-    perror("res_ninit");
+  if(dns_init_state() < 0)
     return -1;
-  }
-  dns_initialized=1;
 #else
   res_init();
 #endif
@@ -96,6 +101,9 @@ static void send_dns_request(struct resolve *rp)
   s=(char *)&rp->ip;
   sprintf(buf, "%d.%d.%d.%d.in-addr.arpa", s[3], s[2], s[1], s[0]);
 #ifdef __APPLE__
+  /* A reboot can restore the DNS socket without calling dns_open(). */
+  if(dns_init_state() < 0)
+    return;
   r=res_nmkquery(&dns_state,QUERY,buf,C_IN,T_PTR,NULL,0,NULL,packet,PACKETSZ);
 #else
   r=res_mkquery(QUERY,buf,C_IN,T_PTR,NULL,0,NULL,packet,PACKETSZ);
