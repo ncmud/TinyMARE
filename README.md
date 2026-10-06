@@ -93,6 +93,42 @@ stop. If no administrator exists yet, find the listener with
 `lsof -nP -iTCP:7348 -sTCP:LISTEN` and send `kill -TERM <PID>` for a graceful stop.
 Stop the existing server before launching another build on the same port.
 
+## Example world
+
+A fresh TinyMARE database contains only Limbo and your first character. For a
+small populated example, Eric Angell's
+[MareMac demo database](https://github.com/erangell/kfest2024/blob/main/MareMac/run/db/mdb)
+provides an educational Azure world with 10 rooms, 18 exits, 22 things, and one
+existing player. It demonstrates rooms and informational objects rather than
+combat or quests. This database has been test-loaded with this release.
+
+Download a pinned copy into its own runtime directory, separate from your main
+game. The example directory, downloaded database, and local saves are ignored
+by Git. Run these commands from the repository root after building:
+
+```sh
+mkdir -p examples/azure-demo/db examples/azure-demo/logs examples/azure-demo/mail
+cp -R run/msgs run/help run/etc run/maps examples/azure-demo/
+curl --fail --location \
+  https://raw.githubusercontent.com/erangell/kfest2024/ba77ec2fb88e29f01d71256f2f34be5a29ad31a2/MareMac/run/db/mdb \
+  --output examples/azure-demo/db/mdb
+(cd examples/azure-demo && ../../build/netmare 7349)
+```
+
+For Zig, substitute `../../zig-out/bin/netmare` in the last command. Connect to
+`localhost:7349` and type `New` to create your own character. The database already
+has an administrator, so your new character will be a regular player. The
+download does not provide that administrator's login credentials.
+
+The server runs in the background. To stop this example, use
+`lsof -nP -iTCP:7349 -sTCP:LISTEN` to find its PID, then `kill -TERM <PID>` to
+save and stop it. Downloading the database again overwrites your example saves.
+
+For an online world to explore, the
+[MicroMARE connection instructions](https://github.com/erangell/kfest2024/blob/main/readme.md)
+list `mare.hoardersheaven.net:4201` with guest access. That is a separate hosted
+world; the Azure download above is the locally runnable example.
+
 ## Verification and comparison
 
 GitHub Actions builds and tests CMake and Zig on Linux and macOS for each pull

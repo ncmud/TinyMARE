@@ -39,6 +39,8 @@
 /run/db/
 /run/logs/
 /run/logs.bak/
+# Downloaded example world and its local runtime state.
+/examples/azure-demo/
 core
 core.[0-9]*
 *.core
