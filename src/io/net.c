@@ -1,4 +1,5 @@
 /* io/net.c */
+/* Modified October 6, 2026: retain daemon stderr in the game error log. */
 /* Main server module, handles all network connections. */
 
 #include "externs.h"
@@ -308,7 +309,9 @@ static void init_io()
 
   fclose(stdin);
   fclose(stdout);
-  fclose(stderr);
+  mkdir("logs", 0777);
+  if(!freopen("logs/error", "a", stderr))
+    exit(1);
 
   /* Disassociate from controlling terminal */
   if(!mare_watchdog) {
