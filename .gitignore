@@ -50,3 +50,7 @@ __pycache__/
 *.swo
 *~
 .DS_Store
+
+# These are archived source files, even if a global ignore excludes their names.
+!/src/hdrs/config.h
+!/src/**/Makefile
