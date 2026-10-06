@@ -1,9 +1,10 @@
 /* mare/stats.c */
+/* Modified October 6, 2026: Limit mallinfo statistics to systems using glibc. */
 
 #include "externs.h"
 #include <sys/resource.h>
 
-#if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
+#if defined(__GLIBC__) && !defined(__CYGWIN__)
 # include <malloc.h>
 #endif
 
@@ -185,7 +186,7 @@ void save_records(FILE *f, int rule)
 /* display network and server statistics */
 void do_info(dbref player, char *type)
 {
-#if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
+#if defined(__GLIBC__) && !defined(__CYGWIN__)
   struct mallinfo memory;
 #endif
 
@@ -444,7 +445,7 @@ void do_info(dbref player, char *type)
     if(usage.ru_msgrcv || usage.ru_minflt)
       notify(player, "%s", "");
 
-#if !defined(__CYGWIN__) && !defined(__FreeBSD__) && !defined(__NetBSD__)
+#if defined(__GLIBC__) && !defined(__CYGWIN__)
     memory=mallinfo();
     *nbuff='\0';
     if(memory.arena)

@@ -1,4 +1,5 @@
 /* io/dns.c */
+/* Modified October 6, 2026: Include legacy DNS declarations provided by the macOS SDK. */
 /* Non-blocking nameserver interface routines */
 
 #include "externs.h"
@@ -13,6 +14,9 @@
 #undef C_ANY
 
 #include <arpa/nameser.h>
+#ifdef __APPLE__
+#include <arpa/nameser_compat.h>
+#endif
 #include <resolv.h>
 
 static struct resolve {

@@ -1,4 +1,5 @@
 /* hdrs/externs.h */
+/* Modified October 6, 2026: Use build-generated settings and native strsignal on macOS/Linux. */
 /* included by every file; sets up our system declarations */
 
 #define _GNU_SOURCE	// Use the GNU C Library Extensions
@@ -15,7 +16,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
-#include "main.h"
+#include <main.h>
 
 /* This macro will evaluate to 0 if we are not using gcc at all */
 #ifndef GCC_VERSION
@@ -178,7 +179,7 @@ enum bitvalues {
 #endif
 
 /* Choose implementation of strsignal() for your system */
-#if !defined(__GLIBC__) && !defined(__sun__)
+#if !defined(__GLIBC__) && !defined(__sun__) && !defined(__APPLE__) && !defined(__linux__)
 # if defined(__hpux__)
 #  define strsignal(x) ""
 # elif defined(__osf__)
